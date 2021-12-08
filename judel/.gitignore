@@ -1,0 +1,11 @@
+
+# ignore for all
+.DS_Store
+.idea/
+.idea/*
+__pycache__/
+__pycache__/*
+
+# Adam-specific ignore
+_meeting_notes/
+_meeting_notes/*

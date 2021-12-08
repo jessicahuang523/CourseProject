@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block body %}
+<script>
+
+    $(document).ready(function()
+        {
+
+            for (i=0;i<{{numResults}};i++){
+                var txt = ''
+
+                console.log(String(i))
+
+                var iid = {{ ids | tojson}}
+                var id = 'doc'+iid[i]
+
+                var noteId = "note"+iid[i];
+                var noteEle = document.getElementById(noteId);
+                var notes = {{ note | tojson}};
+
+                if (notes[i]!='')
+                {
+                    noteEle.innerText = notes[i];
+                }
+
+                var rels = {{rel | tojson }};
+                if (rels[i]!=''){
+                    if (rels[i] == 'Relevant'){
+                        $("#rel"+iid[i]+"Relevant").prop('checked', true)
+                    }
+                    else{
+                        $("#rel"+iid[i]+"Not_Relevant").prop('checked', true)
+                    }
+
+                }
+
+
+
+
+                $('#'+ id).mouseup(function (eve) {
+
+                    if (window.getSelection) {
+                        txt = window.getSelection();
+                    } else if (document.getSelection) {
+                        txt = document.getSelection();
+                    } else if (document.selection) {
+                        txt = document.selection.createRange().text;
+                    }
+                    t = $('<li></li>').text(txt);
+                    var num = eve.target.id.substring(3,)
+                    $('#note'+num).append(t);
+                });
+            }
+        });
+
+</script>
+<form action="http://127.0.0.1:6600/tms/upload_topic" method="post" enctype="multipart/form-data">
+    <input type="file" name="files[]" multiple="true" autocomplete="off" required>
+    <input type="submit" value="Upload file" name="submit">
+</form>
+
+<form action="http://127.0.0.1:6600/tms/topics" method="post" enctype="multipart/form-data">
+    <br>Topic Count: <input type="text" name="count"></br>
+    <input type="submit" value="Generate Topic" name="submit">
+</form>
+
+<a href="/tms/topics/download"><button class='btn btn-default'>Download Visualization</button></a>
+
+
+{% endblock %}

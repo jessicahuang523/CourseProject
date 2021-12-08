@@ -1,0 +1,228 @@
+{% extends "base.html" %}
+    {% block body %}
+  <script>
+function saveNote(butId) {
+  var id = butId.substring(9,);
+  var noteId = "note"+id;
+  var noteEle = document.getElementById(noteId)
+  var note = noteEle.innerText;
+  console.log(note)
+    const data = {
+        "id": id,
+        "note": note ,
+        "ts" : Date.now()
+    }
+    
+
+    fetch("https://127.0.0.1:6000/tms/save_note", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data)
+    }).then(response => {
+        response.json().then(data => {
+          if (data.code == 0) 
+          {
+            alert("Note saved successfully!")
+          }
+})
+      })
+  
+}
+
+function next() {
+  
+    fetch("https://127.0.0.1:6000/tms/next", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        }).then(response => {
+        window.location.href = 'https://127.0.0.1:6000/tms/annotate'
+})
+}
+
+
+function prev() {
+ 
+    fetch("https://127.0.0.1:6000/tms/prev", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        }).then(response => {
+        window.location.href = 'https://127.0.0.1:6000/tms/annotate'
+})
+}
+
+function saveRel(radio) {
+  var rel = radio.value;
+if (radio.id.endsWith("Not_Relevant")){
+  var id = radio.id.substring(3,radio.id.length-12);
+}
+else{
+var id = radio.id.substring(3,radio.id.length-8);
+}
+  
+    const data = {
+        "id": id,
+        "rel": rel ,
+        "ts" : Date.now()
+    }
+    if (rel!='')
+{
+    fetch("https://127.0.0.1:6000/tms/save_rel", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data)
+    }).then(response => {
+        response.json().then(data => {
+         if (data.code == 0)
+         {
+            alert("Relevance saved successfully!")
+          }
+})
+      })
+  }
+}
+
+function exportFile() {
+ location.replace("https://127.0.0.1:6000/tms/export?nocache=" + (new Date()).getTime());
+}
+
+    $(document).ready(function()
+{
+
+  for (i=0;i<{{numResults}};i++){
+    var txt = ''
+
+    console.log(String(i))
+
+    var iid = {{ ids | tojson}}
+    var id = 'doc'+iid[i]
+
+    var noteId = "note"+iid[i];
+    var noteEle = document.getElementById(noteId);
+    var notes = {{ note | tojson}};
+    
+    if (notes[i]!='')
+    {
+      noteEle.innerText = notes[i];
+    }
+     
+var rels = {{rel | tojson }};
+ if (rels[i]!=''){
+ if (rels[i] == 'Relevant'){
+     $("#rel"+iid[i]+"Relevant").prop('checked', true)
+    }
+else{
+$("#rel"+iid[i]+"Not_Relevant").prop('checked', true)
+}
+    
+}
+    
+
+  
+    
+        $('#'+ id).mouseup(function (eve) {
+            
+    if (window.getSelection) {
+        txt = window.getSelection();
+    } else if (document.getSelection) {
+        txt = document.getSelection();
+    } else if (document.selection) {
+        txt = document.selection.createRange().text;
+    }
+    t = $('<li></li>').text(txt);
+    var num = eve.target.id.substring(3,)
+    $('#note'+num).append(t);
+        });
+      }
+    });
+
+      
+
+
+        </script>
+    <form action="https://127.0.0.1:6000/tms/upload" method="post" enctype="multipart/form-data">
+   
+  <input type="file" name="file" id="file">
+  <input type="submit" value="Upload file" name="submit">
+</form>
+
+
+ 
+    
+
+
+<div class="btn-group" style="display: flex; flex-direction: row;">
+  <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+    Select collection
+  <span class="caret"></span></button>
+  <ul class="dropdown-menu">
+       {% for c in collections %}
+    <li><a class="dropdown-item" href="https://127.0.0.1:6000/tms/select/{{c}}">{{ c }}</a></li>
+    {% endfor %}
+  </ul>
+   <button id="export" type="button" class="btn btn-primary" style="margin-left: auto;" onclick="exportFile()">Download Annotations</button>
+</div>
+
+<div class="col-sm-12 main" id ="docs-div"> 
+  <span style="font: 10pt"> Showing {{curStart}}-{{curStart+numResults}} of {{totResults}} results </span>
+  {% for i in range(numResults) %}
+  <div class="card">
+             <div class="card-header">
+       <div style="display: flex;">
+
+                 <b style="font-size:14pt">{{ titles[i] }}</b>
+
+            </div>
+          </div>
+         
+
+              <div class="card-body">
+                <span id='doc{{ ids[i] }}'>{{ fts[i] | safe}}</span>
+               
+            </div>
+
+            </div>
+            <br>
+            <div>
+            {% set allRel =['Not Relevant','Relevant'] %}
+	
+     {% for r in allRel %}
+      <input type="radio" id="rel{{ ids[i] + r.replace(' ','_') }}" style="display:inline-block" name="rel{{ ids[i] + r.replace(' ','_') }}" value="{{r}}" onclick="saveRel(this)">
+  <label style="display:inline-block" for="{{r}}">{{r}}</label> &nbsp;
+   {% endfor %}
+
+ </div>
+ <div id="note-container">
+  <div class="note-title">
+    <span style="font-size:12pt; display: inline-flex; align-items: center;">Notes:</span>
+    <button id="save-note{{ ids[i] }}" type="button" class="btn btn-sm btn-dark" onclick="saveNote(this.id)">Save</button>
+
+  </div>
+    <ol contentEditable="true" class="note" id="note{{ ids[i] }}">
+    </ol>
+
+</div>
+
+  {% endfor %}
+  <br>
+<div id="nav" style="display: flex; flex-direction: row;">
+
+ 
+    {% if curStart != 0 %}
+        <button id="prev" type="button" class="btn btn-sm btn-success" style="margin-left: 10px;" onclick="prev()">Prev</button>
+      {% endif %}
+    {% if curStart+numResults != totResults %}
+            <button id="next" type="button" class="btn btn-sm btn-success" style="margin-left: auto;" onclick="next()">Next</button>
+    {% endif %}
+</div>
+
+  </div>
+
+{% endblock %}

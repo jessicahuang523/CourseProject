@@ -1,0 +1,122 @@
+
+      <script>
+      function loading(){
+          document.getElementById("loading").style.display = "block";
+      };
+  </script>
+<script>   
+    function static_query()
+    {  
+        document.getElementById("btnOperate").onclick = function () {
+	 // operators = document.getElementsByName("op");
+       // var operator = '';
+        // for (i = 0; i < operators.length; i++) {
+        //         console.log(operators[i].checked, operators[i].value);
+        //     if (operators[i].checked) {
+        //         operator = operators[i].value;
+        //         }
+        //     }
+            var arr = new Array();
+            var items1 = document.getElementsByName("sim1");
+            var items2 = document.getElementsByName("sim2");
+           
+            var res = ""
+            var flag = false 
+            for (i = 0; i < items1.length; i++) {
+            if (items1[i].checked) {
+              for (j = 0; j < items2.length; j++) {
+                if (items2[j].checked) {
+                  flag = true 
+                res += `"${items1[i].value} ${items2[j].value}"~{{ slop }}`  +" OR ";
+                }
+            }
+            if (flag == false){
+              res += `"${items1[i].value}"` + " OR "
+            }
+          }}
+if (flag == false){
+  res += `{{ word1 }}`
+}
+else{
+	res += `"{{ word1 }} {{ word2 }}"~{{ slop }}`}
+
+	 var node = document.getElementById("query")
+            node.innerHTML = "<b>Query:</b> <br>"+res
+           // alert(res.substring(0, res.length));
+        };
+    };
+    </script>
+
+{% extends "base.html" %}
+{% block body %}
+    <!-- Form -->
+    <div class="container">
+      <form action="/tms" method='POST'>
+
+        <label for="Number One">Word 1</label>
+
+        <input
+          type="text"
+          placeholder="word1"
+          class="u-full-width"
+          name="word1"
+        />
+        <label for="Number two">Word 2</label>
+        <input
+          type="text"
+          placeholder="word2"
+          class="u-full-width"
+          name="word2"
+        />
+        <label for="Model">Models</label>
+        <select class="u-full-width" name="model" method="POST" action="/">
+          <option value="{{models[0]}}" selected>{{models[0]}}</option>
+          {% for m in models[1:] %}
+            <option value="{{m}}">{{m}}</option>
+          {% endfor %}
+        </select>
+
+        <label for="Number">Number of words</label>
+        <select class="u-full-width" name="num">
+          <option value="10">10</option>
+          <option value="30">30</option>
+          <option value="50">50</option>
+          <option value="100">100</option>
+        </select>
+        <label for="dist">Max Distance between words 1 and 2 in article:</label>
+  <input type="number" id="distinput" name="slop" value=10 min="1" max="10000">
+        <input id="getSim" type="submit" value="Get the similar words" onclick="loading()"/>
+        <br />
+          <p>Selected Model: {{ model }} </p>
+          <p>Selected Word1: {{ word1 }} </p>
+           <p>Selected Word2: {{ word2 }} </p>
+          <div id="loading" style="display:none;text-align: center;">
+<div class="loader"></div>Loading...</div>
+<div class="row" style="display: flex;">
+  <div class="column" style="flex: 50%">
+          {% for r in wordRes1 %}
+            <p><input type="checkbox" name="sim1" value="{{ r[0] }}" checked />{{ r[0] }} &nbsp; {{ r[1] }}</p>
+          {% endfor %}
+  </div>
+  <div class="column" style="flex: 50%">
+
+          {% for r in wordRes2 %}
+            <p><input type="checkbox" name="sim2" value="{{ r[0] }}" checked />{{ r[0] }} &nbsp; {{ r[1] }}</p>
+          {% endfor %}
+  </div>
+</div>
+        <br />
+       <!--  <p style="display:inline-block">
+        Select Operator &nbsp; 
+     {% set allOps =['OR','AND'] %}
+     {% for op in allOps %}
+      <input type="radio"  style="display:inline-block" name="op" value="{{op}}">
+  <label style="display:inline-block" for="{{op}}">{{op}}</label> &nbsp;
+   {% endfor %} -->
+    <br/>  <input id="btnOperate" type="button"  style="display:inline-block" value="Generate the query" onclick="static_query()"/> </p>
+<br/>
+ <div>
+      <p id="query"></p> 
+    </div>
+      </form>
+{% endblock %}
